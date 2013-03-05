@@ -1,0 +1,32 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity" >
+   
+  <TextView
+    android:id="@+id/textView1"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_gravity="center"
+    android:text="Pressing start will take a picture every 15 seconds until cancel is pressed." />
+    
+  <Button
+    android:id="@+id/button_start"
+    android:text="START"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_gravity="center"
+    android:layout_below="@+id/textView1"
+    />
+  
+  <Button
+    android:id="@+id/button_cancel"
+    android:text="CANCEL"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_gravity="center"
+    android:layout_below="@+id/button_start"
+    />
+  
+</RelativeLayout>
