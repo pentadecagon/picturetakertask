@@ -11,6 +11,8 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.hardware.Camera;
+import android.hardware.Camera.AutoFocusCallback;
+import android.hardware.Camera.Parameters;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -19,6 +21,8 @@ import android.util.Log;
 import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.ImageView;
 
 /**
@@ -44,6 +48,8 @@ public class AutoTakePictureActivity extends Activity implements SurfaceHolder.C
       //a handler to delay the taking of the photo until the preview window is ready
       Handler handler = new Handler();
 
+      //the camera parameters
+      private Parameters parameters;
      
     /** Called when the activity is first created. */
     @Override
@@ -51,6 +57,13 @@ public class AutoTakePictureActivity extends Activity implements SurfaceHolder.C
     {
     	Log.d("camerabasic", "AutoTakePictureActivity.onCreate called");
         super.onCreate(savedInstanceState);
+        
+        //Remove title bar
+        this.requestWindowFeature(Window.FEATURE_NO_TITLE);
+
+        //Remove notification bar
+        this.getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
+
         setContentView(R.layout.auto_take_picture);
        
         //get the Image View at the main.xml file
@@ -76,12 +89,19 @@ public class AutoTakePictureActivity extends Activity implements SurfaceHolder.C
       {
     	  Log.d("camerabasic", "AutoTakePictureActivity.surfaceChanged called");
 
-           mCamera.startPreview();
-
-           setCameraDisplayOrientation(this, 0, mCamera);
-
-	       //got to wait a bit or picture comes out all black
-	       handler.postDelayed(new PictureTaker(), 3000);
+    	  //set display orientation (portrait or landscape) based on screen rotation
+    	  setCameraDisplayOrientation(this, 0, mCamera);
+    	  
+    	  //set picture size to largest possible
+    	  parameters = mCamera.getParameters();
+    	  Camera.Size pictureSize = getBiggestPictureSize(parameters);   	  
+    	  parameters.setPictureSize(pictureSize.width, pictureSize.height);
+    	  mCamera.setParameters(parameters);
+    	  
+          mCamera.startPreview();
+          
+          //set callback for when preview has been initialized
+          mCamera.setOneShotPreviewCallback(oneShotPreviewCallback);
       }
       
       /**
@@ -113,23 +133,61 @@ public class AutoTakePictureActivity extends Activity implements SurfaceHolder.C
       }
       
       /**
-       * Takes the picture
-       */ 
-      private class PictureTaker implements Runnable{
+       * Get the biggest picture size allowed by the device's camera
+       */
+      private Camera.Size getBiggestPictureSize(Camera.Parameters parameters) {
+    	    Camera.Size result=null;
 
-          @Override
-          public void run() {
-          	Log.d("camera", "taking pic in PictureTaker");
-          	if (mCamera != null)
-          	{
-          		mCamera.takePicture(null, null, mCall);
-          	}
-          }
-      }
+    	    for (Camera.Size size : parameters.getSupportedPictureSizes()) {
+    	      if (result == null) {
+    	        result=size;
+    	      }
+    	      else {
+    	        int resultArea=result.width * result.height;
+    	        int newArea=size.width * size.height;
+
+    	        if (newArea > resultArea) {
+    	          result=size;
+    	        }
+    	      }
+    	    }
+
+    	    return(result);
+    	  }
+
+      /**
+       * Callback for when preview has been initialized
+       */
+      private Camera.PreviewCallback oneShotPreviewCallback = new Camera.PreviewCallback() {
+
+		@Override
+		public void onPreviewFrame(byte[] arg0, Camera arg1) {
+			Log.d("camera", "called oneShotPreviewCallback.onPreviewFrame");
+			//have to delay the action by 1 sec or the picture turns out black
+			handler.postDelayed(
+				new Runnable(){
+					@Override
+					public void run() {
+						mCamera.autoFocus(autoFocusCallback);
+					}
+				}, 1000);
+		}	  
+      };
+      
+      /**
+       * Auto focus callback
+       */
+      private AutoFocusCallback autoFocusCallback = new AutoFocusCallback(){
+
+    	  @Override
+    	  public void onAutoFocus(boolean arg0, Camera arg1) {
+    		  mCamera.takePicture(null, null, mCall);
+    	  }
+      };
 
       /**
        * Callback function that takes and stores the picture
-       */ 
+       */
       Camera.PictureCallback mCall = new Camera.PictureCallback()
       {
       
