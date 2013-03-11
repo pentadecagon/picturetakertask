@@ -11,12 +11,12 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.hardware.Camera;
-import android.hardware.Camera.Parameters;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.util.Log;
+import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.widget.ImageView;
@@ -40,9 +40,8 @@ public class AutoTakePictureActivity extends Activity implements SurfaceHolder.C
       private SurfaceHolder sHolder; 
       //a variable to control the camera
       private Camera mCamera;
-      //the camera parameters
-      private Parameters parameters;
-      
+
+      //a handler to delay the taking of the photo until the preview window is ready
       Handler handler = new Handler();
 
      
@@ -50,7 +49,7 @@ public class AutoTakePictureActivity extends Activity implements SurfaceHolder.C
     @Override
     public void onCreate(Bundle savedInstanceState)
     {
-    	Log.d("camerabasic", "onCreate called");
+    	Log.d("camerabasic", "AutoTakePictureActivity.onCreate called");
         super.onCreate(savedInstanceState);
         setContentView(R.layout.auto_take_picture);
        
@@ -70,32 +69,67 @@ public class AutoTakePictureActivity extends Activity implements SurfaceHolder.C
         sHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
     }
 
-
+    /**
+     * Called when the surface is changed
+     */
       public void surfaceChanged(SurfaceHolder arg0, int arg1, int arg2, int arg3)
       {
-    	  Log.d("camerabasic", "surfaceChanged called");
-    	  //get camera parameters
-          parameters = mCamera.getParameters();
-             
-             //set camera parameters
-           mCamera.setParameters(parameters);
-           mCamera.startPreview();
-          
-           //sets what code should be executed after the picture is taken
+    	  Log.d("camerabasic", "AutoTakePictureActivity.surfaceChanged called");
 
-           //got to wait a bit or picture comes out all black
-           handler.postDelayed(new ViewUpdater(), 3000);
+           mCamera.startPreview();
+
+           setCameraDisplayOrientation(this, 0, mCamera);
+
+	       //got to wait a bit or picture comes out all black
+	       handler.postDelayed(new PictureTaker(), 3000);
       }
       
-      private class ViewUpdater implements Runnable{
+      /**
+       * Set the camera orientation based on the phone rotation
+       */
+      public static void setCameraDisplayOrientation(Activity activity,
+              int cameraId, android.hardware.Camera camera) {
+          android.hardware.Camera.CameraInfo info =
+                  new android.hardware.Camera.CameraInfo();
+          android.hardware.Camera.getCameraInfo(cameraId, info);
+          int rotation = activity.getWindowManager().getDefaultDisplay()
+                  .getRotation();
+          int degrees = 0;
+          switch (rotation) {
+              case Surface.ROTATION_0: degrees = 0; break;
+              case Surface.ROTATION_90: degrees = 90; break;
+              case Surface.ROTATION_180: degrees = 180; break;
+              case Surface.ROTATION_270: degrees = 270; break;
+          }
+
+          int result;
+          if (info.facing == Camera.CameraInfo.CAMERA_FACING_FRONT) {
+              result = (info.orientation + degrees) % 360;
+              result = (360 - result) % 360;  // compensate the mirror
+          } else {  // back-facing
+              result = (info.orientation - degrees + 360) % 360;
+          }
+          camera.setDisplayOrientation(result);
+      }
+      
+      /**
+       * Takes the picture
+       */ 
+      private class PictureTaker implements Runnable{
 
           @Override
           public void run() {
-          	Log.d("camera", "taking pic in ViewUpdater");
-          	mCamera.takePicture(null, null, mCall);
+          	Log.d("camera", "taking pic in PictureTaker");
+          	if (mCamera != null)
+          	{
+          		mCamera.takePicture(null, null, mCall);
+          	}
           }
       }
 
+      /**
+       * Callback function that takes and stores the picture
+       */ 
       Camera.PictureCallback mCall = new Camera.PictureCallback()
       {
       
@@ -133,14 +167,26 @@ public class AutoTakePictureActivity extends Activity implements SurfaceHolder.C
                        Log.d("CAMERA", e.getMessage());
                    }
                    
-                   //mCamera.startPreview();
+                   Task task = new Task(AutoTakePictureActivity.this);
+                   task.setConfigFromSharedPreferences();
+                   //check if the task will expire before the next iteration: if so, cancel it
+                   if (task.checkIfTaskWillExpireBeforeNextIteration())
+                   {
+                	   Log.d("camera", "AutoTakePictureActivity: task will expire before next iteration so going to end it");
+                	   
+                	   task.expirePictureTakingService();
+                   }
+                   
                    finish();
         }
       };
       
+      /**
+       * Called whenever the surface is created
+       */
       public void surfaceCreated(SurfaceHolder holder)
       {
-    	  	Log.d("camerabasic", "surfaceCreated called");
+    	  	Log.d("camerabasic", "AutoTakePictureActivity.surfaceCreated called");
             // The Surface has been created, acquire the camera and tell it where
 	        // to draw the preview.
 	        mCamera = Camera.open();
@@ -153,7 +199,9 @@ public class AutoTakePictureActivity extends Activity implements SurfaceHolder.C
 	        }
       }
 
-
+      /**
+       * Called whenever the surface is destroyed
+       */
       public void surfaceDestroyed(SurfaceHolder holder)
       {
     	  	Log.d("camerabasic", "surfaceDestroyed called");
@@ -163,5 +211,5 @@ public class AutoTakePictureActivity extends Activity implements SurfaceHolder.C
 	        mCamera.release();
 	        //unbind the camera from this object
 	        mCamera = null;
-      } 
+      }
 }
