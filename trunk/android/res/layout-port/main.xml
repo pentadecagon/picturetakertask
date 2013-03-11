@@ -1,0 +1,188 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:gravity="center"
+    tools:context=".MainActivity" >
+    
+    <com.picturetakertask.PreviewWindow
+        android:id="@+id/preview_window"
+        android:layout_width="200dp"
+	    android:layout_height="290dp"
+	    android:layout_marginBottom="5dp" />
+   
+	<RelativeLayout
+	    android:id="@+id/ready_layout"
+	    android:layout_below="@+id/preview_window"
+	    android:layout_width="wrap_content"
+	    android:layout_height="wrap_content"
+	    android:gravity="center" >
+    
+		<TextView
+		    android:id="@+id/ready_header"
+		    android:layout_width="wrap_content"
+		    android:layout_height="wrap_content"
+		    android:layout_centerHorizontal="true"
+		    android:text="Schedule a new task" />
+		   
+			<TableLayout
+		            android:id="@+id/ready_formTable"
+		            android:layout_width="wrap_content"
+		            android:layout_height="wrap_content"
+		            android:layout_centerHorizontal="true"
+		            android:layout_below="@+id/ready_header">
+		
+		            <TableRow>
+		
+		                <TextView
+		                    android:layout_width="wrap_content"
+		                    android:layout_height="wrap_content"
+		                    android:text="Task duration" >
+		                </TextView>
+		
+		                <com.picturetakertask.TimeInputText
+		                    android:id="@+id/edit_duration"
+		                    android:layout_width="wrap_content"
+		                    android:layout_height="wrap_content"
+		                    android:tag="Task duration"
+						    android:text="" >
+		                </com.picturetakertask.TimeInputText>
+		
+		            </TableRow>
+		            
+		            <TableRow>
+		
+		                <TextView
+		                    android:layout_width="wrap_content"
+		                    android:layout_height="wrap_content"
+		                    android:text="Repeat interval" >
+		                </TextView>
+		
+		                <com.picturetakertask.TimeInputText
+		                    android:id="@+id/edit_interval"
+		                    android:layout_width="wrap_content"
+		                    android:layout_height="wrap_content"
+		                    android:tag="Repeat interval"
+						    android:text="" >
+		                </com.picturetakertask.TimeInputText>
+		
+		            </TableRow>
+		            
+		            <TableRow>
+		
+		                <TextView
+		                    android:layout_width="wrap_content"
+		                    android:layout_height="wrap_content"
+		                    android:text="Delay" >
+		                </TextView>
+		
+		                <com.picturetakertask.TimeInputText
+		                    android:id="@+id/edit_delay"
+		                    android:layout_width="wrap_content"
+		                    android:layout_height="wrap_content"
+		                    android:tag="Repeat interval"
+						    android:text="" >
+		                </com.picturetakertask.TimeInputText>
+		
+		            </TableRow>
+		
+		      </TableLayout>
+		  
+			  <Button
+			    android:id="@+id/button_start"
+			    android:text="START"
+			    android:layout_width="wrap_content"
+			    android:layout_height="wrap_content"
+			    android:layout_centerHorizontal="true"
+			    android:layout_below="@+id/ready_formTable"
+			    />
+
+	</RelativeLayout>
+	
+	<RelativeLayout
+	    android:id="@+id/running_layout"
+	    android:layout_below="@+id/preview_window"
+	    android:layout_width="wrap_content"
+	    android:layout_height="wrap_content"
+	    android:visibility="gone"
+	    android:gravity="center" >
+			  
+		<TextView
+		    android:id="@+id/running_header"
+		    android:layout_width="wrap_content"
+		    android:layout_height="wrap_content"
+		    android:layout_centerHorizontal="true"
+		    android:text="Task is currently running" />
+		   
+			<TableLayout
+		            android:id="@+id/running_formTable"
+		            android:layout_width="wrap_content"
+		            android:layout_height="wrap_content"
+		            android:layout_centerHorizontal="true"
+		            android:layout_below="@+id/running_header">
+		
+		            <TableRow>
+		
+		                <TextView
+		                    android:layout_width="wrap_content"
+		                    android:layout_height="wrap_content"
+		                    android:text="Task duration  " >
+		                </TextView>
+		
+		                <TextView
+		                    android:id="@+id/info_duration"
+		                    android:layout_width="wrap_content"
+		                    android:layout_height="wrap_content"
+						    android:text="" >
+		                </TextView>
+		
+		            </TableRow>
+		            
+		            <TableRow>
+		
+		                <TextView
+		                    android:layout_width="wrap_content"
+		                    android:layout_height="wrap_content"
+		                    android:text="Repeat interval  " >
+		                </TextView>
+		
+		                <TextView
+		                    android:id="@+id/info_interval"
+		                    android:layout_width="wrap_content"
+		                    android:layout_height="wrap_content"
+						    android:text="" >
+		                </TextView>
+		
+		            </TableRow>
+		            
+		            <TableRow>
+		
+		                <TextView
+		                    android:layout_width="wrap_content"
+		                    android:layout_height="wrap_content"
+		                    android:text="Delay  " >
+		                </TextView>
+		
+		                <TextView
+		                    android:id="@+id/info_delay"
+		                    android:layout_width="wrap_content"
+		                    android:layout_height="wrap_content"
+						    android:text="" >
+		                </TextView>
+		
+		            </TableRow>
+		
+		      </TableLayout>
+
+	    <Button
+			    android:id="@+id/button_cancel"
+			    android:text="CANCEL"
+			    android:layout_width="wrap_content"
+			    android:layout_height="wrap_content"
+			    android:layout_centerHorizontal="true"
+			    android:layout_below="@+id/running_formTable"
+			    />
+	    
+	</RelativeLayout>
+  
+</RelativeLayout>

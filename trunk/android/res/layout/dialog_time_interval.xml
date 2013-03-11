@@ -1,0 +1,73 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content">
+    <ImageView
+        android:src="@drawable/clock"
+        android:layout_width="match_parent"
+        android:layout_height="64dp"
+        android:scaleType="center"
+        android:background="#cc0000"
+        android:contentDescription="@string/app_name" />
+    <TextView
+        android:id="@+id/description"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="15dp"
+        android:layout_marginLeft="15dp"
+        android:layout_marginRight="15dp"
+        android:layout_marginBottom="4dp"
+        android:text="Choose interval" />
+
+   <LinearLayout
+    android:orientation="horizontal"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    android:paddingLeft="15dp"
+    android:paddingRight="15dp"
+    android:paddingBottom="5dp"> 
+    <EditText
+	        android:id="@+id/editTextHours"
+	        android:layout_weight="1"
+	        android:layout_height="wrap_content"
+	        android:layout_width="wrap_content"
+	        android:text="0"
+	        android:inputType="number" />
+    <TextView
+        android:id="@+id/hours"
+        android:layout_weight="2"
+        android:layout_height="wrap_content"
+	    android:layout_width="wrap_content"
+	    android:paddingLeft="5dp"
+        android:text="hours" />
+    <EditText
+	        android:id="@+id/editTextMin"
+	        android:layout_weight="1"
+	        android:layout_height="wrap_content"
+	        android:layout_width="wrap_content"
+	        android:text="15"
+	        android:inputType="number" />
+    <TextView
+        android:id="@+id/min"
+        android:layout_weight="2"
+        android:layout_height="wrap_content"
+	    android:layout_width="wrap_content"
+	    android:paddingLeft="5dp"
+        android:text="min" /> 
+    <EditText
+	        android:id="@+id/editTextSec"
+	        android:layout_weight="1"
+	        android:layout_height="wrap_content"
+	        android:layout_width="wrap_content"
+	        android:text="0"
+	        android:maxLength="2"
+	        android:inputType="number" />
+    <TextView
+        android:id="@+id/sec"
+        android:layout_weight="2"
+        android:layout_height="wrap_content"
+	    android:layout_width="wrap_content"
+	    android:paddingLeft="5dp"
+        android:text="sec" />
+    </LinearLayout>
+</LinearLayout>
