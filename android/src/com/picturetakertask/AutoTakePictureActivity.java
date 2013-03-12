@@ -23,6 +23,7 @@ import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 
 /**
@@ -31,10 +32,8 @@ import android.widget.ImageView;
 
 public class AutoTakePictureActivity extends Activity implements SurfaceHolder.Callback
 {
-      //a variable to store a reference to the Image View at the main.xml file
-      private ImageView iv_image;
       //a variable to store a reference to the Surface View at the main.xml file
-      private SurfaceView sv;
+      private SurfaceView sv = null;
    
       //a bitmap to display the captured image
       private Bitmap bmp;
@@ -64,16 +63,22 @@ public class AutoTakePictureActivity extends Activity implements SurfaceHolder.C
         //Remove title bar
         this.requestWindowFeature(Window.FEATURE_NO_TITLE);
 
-        //Remove notification bar
-        this.getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
-
         setContentView(R.layout.auto_take_picture);
-       
-        //get the Image View at the main.xml file
-        iv_image = (ImageView) findViewById(R.id.imageView);
-       
+
+    }
+    
+    @Override
+	protected void onResume() {
+    	Log.d("camera", "AutoTakePictureActivity.onResume called");
+		super.onResume();
+		
+		//add preview window, which activates camera
+		sv = new SurfaceView(this);
+		FrameLayout preview = (FrameLayout) findViewById(R.id.preview_window);
+		preview.addView(sv);
+
         //get the Surface View at the main.xml file
-        sv = (SurfaceView) findViewById(R.id.surfaceView);
+        //sv = (SurfaceView) findViewById(R.id.surfaceView);
        
         //Get a surface
         sHolder = sv.getHolder();
@@ -83,6 +88,18 @@ public class AutoTakePictureActivity extends Activity implements SurfaceHolder.C
        
         //tells Android that this surface will have its data constantly replaced
         sHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
+    }
+    
+    @Override
+    protected void onPause() {
+    	
+    	//remove preview window, which deactivates camera
+    	FrameLayout preview = (FrameLayout) findViewById(R.id.preview_window);
+    	preview.removeView(sv);
+    	sv = null;
+
+        super.onPause();
+        Log.d("camera", "AutoTakePictureActivity.onPause called");
     }
 
     /**
@@ -165,15 +182,17 @@ public class AutoTakePictureActivity extends Activity implements SurfaceHolder.C
 
 		@Override
 		public void onPreviewFrame(byte[] arg0, Camera arg1) {
-			Log.d("camera", "called oneShotPreviewCallback.onPreviewFrame");
 			//have to delay the action by 1 sec or the picture turns out black
 			handler.postDelayed(
 				new Runnable(){
 					@Override
 					public void run() {
-						mCamera.autoFocus(autoFocusCallback);
+						if (mCamera != null)
+						{
+							mCamera.autoFocus(autoFocusCallback);
+						}
 					}
-				}, 1000);
+				}, 500);
 		}	  
       };
       
@@ -184,7 +203,10 @@ public class AutoTakePictureActivity extends Activity implements SurfaceHolder.C
 
     	  @Override
     	  public void onAutoFocus(boolean arg0, Camera arg1) {
-    		  mCamera.takePicture(null, null, mCall);
+    		  if (mCamera != null)
+    		  {
+    			  mCamera.takePicture(null, null, mCall);
+    		  }
     	  }
       };
 
@@ -199,8 +221,7 @@ public class AutoTakePictureActivity extends Activity implements SurfaceHolder.C
        	 	  Log.d("camerabasic", "onPictureTaken called");
               //decode the data obtained by the camera into a Bitmap
               bmp = BitmapFactory.decodeByteArray(data, 0, data.length);
-              //set the iv_image
-              iv_image.setImageBitmap(bmp);
+
               FileOutputStream outStream = null;
                    try{
                    	File mediaStorageDir = new File(Environment.getExternalStoragePublicDirectory(
@@ -227,17 +248,7 @@ public class AutoTakePictureActivity extends Activity implements SurfaceHolder.C
                    } catch (IOException e){
                        Log.d("CAMERA", e.getMessage());
                    }
-                   
-                   Task task = new Task(AutoTakePictureActivity.this);
-                   task.setConfigFromSharedPreferences();
-                   //check if the task will expire before the next iteration: if so, cancel it
-                   if (task.checkIfTaskWillExpireBeforeNextIteration())
-                   {
-                	   Log.d("camera", "AutoTakePictureActivity: task will expire before next iteration so going to end it");
-                	   
-                	   task.expirePictureTakingService();
-                   }
-                   
+
                    finish();
         }
       };
@@ -265,7 +276,7 @@ public class AutoTakePictureActivity extends Activity implements SurfaceHolder.C
        */
       public void surfaceDestroyed(SurfaceHolder holder)
       {
-    	  	Log.d("camerabasic", "surfaceDestroyed called");
+    	  	Log.d("camerabasic", "AutoTakePictureActivity.surfaceDestroyed called");
             //stop the preview
             mCamera.stopPreview();
             //release the camera

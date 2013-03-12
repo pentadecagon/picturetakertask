@@ -5,12 +5,13 @@
     android:gravity="center"
     tools:context=".MainActivity" >
     
-    <com.picturetakertask.PreviewWindow
-        android:id="@+id/preview_window"
+  <FrameLayout
+    	android:id="@+id/preview_window"
         android:layout_width="200dp"
 	    android:layout_height="290dp"
-	    android:layout_marginBottom="5dp" />
-   
+	    android:layout_marginBottom="5dp"
+    />
+
 	<RelativeLayout
 	    android:id="@+id/ready_layout"
 	    android:layout_below="@+id/preview_window"

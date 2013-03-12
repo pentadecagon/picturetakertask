@@ -23,11 +23,11 @@ public class Task {
 	public long delay = 0;
 	
 	//default duration if we don't find any in the shared preferences
-	private static final int DURATION_DEFAULT_VALUE = 180000;
+	private static final int DURATION_DEFAULT_VALUE = 15000;
 	//default interval if we don't find any in the shared preferences
-	private static final int INTERVAL_DEFAULT_VALUE = 20000;
+	private static final int INTERVAL_DEFAULT_VALUE = 5000;
 	//default delay if we don't find any in the shared preferences
-	private static final int DELAY_DEFAULT_VALUE = 1000;
+	private static final int DELAY_DEFAULT_VALUE = 0;
 	
 	//filename of shared preferences file
 	public static final String TASK_SETTINGS_SHARED_PREFS_NAME = "PictureTakerTaskSharedPrefs";
@@ -43,6 +43,7 @@ public class Task {
 	public Task(Context context)
 	{
 		this.context = context;
+		setConfigFromSharedPreferences();
 	}
 	
     /**
@@ -50,7 +51,7 @@ public class Task {
      */
 	public void setConfigFromSharedPreferences()
 	{
-		Log.d("picturetaker", "called updateSharedPreferencesFromConfig");
+		Log.d("picturetaker", "called setConfigFromSharedPreferences");
 		
 		//get task preferences
 		SharedPreferences prefs = context.getSharedPreferences(TASK_SETTINGS_SHARED_PREFS_NAME, Context.MODE_PRIVATE);
@@ -104,6 +105,11 @@ public class Task {
 		
 		Toast.makeText(context, "Picture taking task is active!!!",
 		       Toast.LENGTH_LONG).show();
+		
+		//show notification
+		NotificationHandler notificationHandler = new NotificationHandler(context);
+		notificationHandler.initializeNotification();
+		notificationHandler.initializeProgressBar();
 	}
 	
     /**
@@ -112,15 +118,19 @@ public class Task {
 	public void cancelPictureTakingService()
 	{
 		Log.d("picturetaker", "called cancelPictureTakingService");
+	
+		//cancel notification
+		if (NotificationHandler.notificationManager != null)
+		{
+			Log.d("picturetakertask", "Task.cancelPictureTakingService: canceling notification");
+			NotificationHandler.notificationManager.cancelAll();
+		}
 		
-		isRunning = false;
-		
-		updateSharedPreferencesFromConfig();
-		
-		WakefulIntentService.cancelAlarms(context);
-		  
 		Toast.makeText(context, "Picture taking task is canceled!!!",
   				Toast.LENGTH_LONG).show();
+		
+		endPictureTakingService();
+
 	}
 	
     /**
@@ -129,75 +139,114 @@ public class Task {
 	public void expirePictureTakingService()
 	{
 		Log.d("picturetaker", "called expirePictureTakingService");
+
+		//finalize notification
+		NotificationHandler notificationHandler = new NotificationHandler(context);
+		notificationHandler.finalizeNotification();
+		  
+		Toast.makeText(context, "Picture taking task has expired!!!",
+  				Toast.LENGTH_LONG).show();
+		
+		endPictureTakingService();
+	}
+	
+    /**
+     * End the scheduled task "silently" (without showing any notifications)
+     */
+	public void endPictureTakingServiceSilently()
+	{
+		Log.d("picturetaker", "called endPictureTakingServiceSilently");
+		
+		//cancel notification
+		if (NotificationHandler.notificationManager != null)
+		{
+			Log.d("picturetakertask", "Task.endPictureTakingServiceSilently: canceling notification");
+			NotificationHandler.notificationManager.cancelAll();
+		}
+		
+		endPictureTakingService();
+	}
+	
+    /**
+     * End the scheduled task
+     */
+	private void endPictureTakingService()
+	{
+		Log.d("picturetaker", "called endPictureTakingService");
 		
 		isRunning = false;
 		
 		updateSharedPreferencesFromConfig();
 		
 		WakefulIntentService.cancelAlarms(context);
-		  
-		Toast.makeText(context, "Picture taking task has expired!!!",
-  				Toast.LENGTH_LONG).show();
 	}
-	
-    /**
-     * Check if the task's duration is over
-     * 
-     * @return boolean
-     */
-	public boolean checkIfTaskHasExpired()
-	{
-		SharedPreferences prefs = context.getSharedPreferences(TASK_SETTINGS_SHARED_PREFS_NAME, MainActivity.MODE_PRIVATE);
 
-		long duration = prefs.getLong("duration", 0);
+    /**
+     * Get the task's progress so far.
+     * 
+     * @double progress A number between 0 and 1 (0 = task has just started, 1 = task is finished)
+     */
+	public double getProgress()
+	{
 		if (duration < 1)
 		{
-			throw new RuntimeException("duration is 0 in AppListener.checkIfTaskHasExpired. This should never happen because duration should have been"+
+			throw new RuntimeException("duration is 0 in Task.getProgress. This should never happen because duration should have been"+
 							" have been written to the shared preferences by this point. cannot continue.");
 		}
 		
+		SharedPreferences prefs = context.getSharedPreferences(TASK_SETTINGS_SHARED_PREFS_NAME, MainActivity.MODE_PRIVATE);
 		long startTime = prefs.getLong("startTime", 0);
 		if (startTime < 1)
 		{
-			throw new RuntimeException("startTime is 0 in AppListener.checkIfTaskHasExpired. This should never happen because startTime should have been"+
+			throw new RuntimeException("startTime is 0 in Task.getProgress. This should never happen because startTime should have been"+
 							" have been written to the shared preferences by this point. cannot continue.");
 		}
-		
-		boolean taskHasExpired = ((System.currentTimeMillis() - startTime) > duration);
-		return taskHasExpired;	
+
+		double progress = ((double) (System.currentTimeMillis() - startTime)/ (double) duration);
+		if (progress < 0.0)
+		{
+			progress = 0.0;
+		}
+		Log.d("picturetakertask", "exiting Task.getProgress with progress="+progress);
+		return progress;
 	}
 	
     /**
-     * Check if the task will expire before the next repeat
+     * Get what the task's progress will be on the next iteration.
      * 
-     * @return boolean
+     * Useful for looking into the future and seeing if the task will have expired by the next iteration.
+     * 
+     * @double progress A number between 0 and 1 (0 = task has just started, 1 = task is finished)
      */
-	public boolean checkIfTaskWillExpireBeforeNextIteration()
+	public double getProgressAtNextIteration()
 	{
-		SharedPreferences prefs = context.getSharedPreferences(TASK_SETTINGS_SHARED_PREFS_NAME, MainActivity.MODE_PRIVATE);
-
-		long interval = prefs.getLong("interval", 0);
 		if (interval < 1)
 		{
-			throw new RuntimeException("interval is 0 in AppListener.checkIfTaskWillExpireBeforeNextIteration. This should never happen because interval should have been"+
+			throw new RuntimeException("interval is 0 in Task.getProgressAtNextIteration. This should never happen because interval should have been"+
 							" have been written to the shared preferences by this point. cannot continue.");
 		}
 		
-		long duration = prefs.getLong("duration", 0);
 		if (duration < 1)
 		{
-			throw new RuntimeException("duration is 0 in AppListener.checkIfTaskWillExpireBeforeNextIteration. This should never happen because duration should have been"+
+			throw new RuntimeException("duration is 0 in Task.getProgressAtNextIteration. This should never happen because duration should have been"+
 							" have been written to the shared preferences by this point. cannot continue.");
 		}
 		
+		SharedPreferences prefs = context.getSharedPreferences(TASK_SETTINGS_SHARED_PREFS_NAME, MainActivity.MODE_PRIVATE);
 		long startTime = prefs.getLong("startTime", 0);
 		if (startTime < 1)
 		{
-			throw new RuntimeException("startTime is 0 in AppListener.checkIfTaskWillExpireBeforeNextIteration. This should never happen because startTime should have been"+
+			throw new RuntimeException("startTime is 0 in Task.getProgressAtNextIteration. This should never happen because startTime should have been"+
 							" have been written to the shared preferences by this point. cannot continue.");
 		}
-		
-		boolean taskWillExpire = ((System.currentTimeMillis() + interval - startTime) > duration);
-		return taskWillExpire;	
+
+		double progress =  ((double) (System.currentTimeMillis() + interval - startTime)/ (double) duration);
+		if (progress < 0.0)
+		{
+			progress = 0.0;
+		}
+		Log.d("picturetakertask", "exiting Task.getProgressAtNextIteration with progress="+progress);
+		return progress;
 	}
+
 }

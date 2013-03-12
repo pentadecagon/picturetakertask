@@ -22,7 +22,7 @@ public class AppService extends WakefulIntentService {
   
   @Override
   protected void doWakefulWork(Intent intent) {
-    Log.i("AppService", "hello this is a test!!");
+    Log.i("AppService", "called AppService.doWakefulWork");
     Intent i = new Intent(this, AutoTakePictureActivity.class);
     i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 	startActivity(i);
