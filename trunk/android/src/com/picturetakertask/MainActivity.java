@@ -35,6 +35,10 @@ public class MainActivity extends FragmentActivity {
 	private TimeInputText editInterval;
 	//edit delay field
 	private TimeInputText editDelay;
+	//error message for edit duration field
+	private TextView editDurationError;
+	//error message for edit interval field
+	private TextView editIntervalError;
 	
 	private PreviewWindow mPreview = null;
 
@@ -95,6 +99,10 @@ public class MainActivity extends FragmentActivity {
 		editInterval = (TimeInputText) findViewById(R.id.edit_interval);
 		editDelay = (TimeInputText) findViewById(R.id.edit_delay);
 		
+		//create handles to the error fields
+		editDurationError = (TextView) findViewById(R.id.edit_duration_error);
+		editIntervalError = (TextView) findViewById(R.id.edit_interval_error);
+		
 		// Add a listener to the start button
 		Button startButton = (Button) findViewById(R.id.button_start);
 		startButton.setOnClickListener(
@@ -104,7 +112,33 @@ public class MainActivity extends FragmentActivity {
 						task.duration = editDuration.timeInterval.getTimeInMillis();
 						task.interval = editInterval.timeInterval.getTimeInMillis();
 						task.delay = editDelay.timeInterval.getTimeInMillis();
-
+						
+						//validate input
+						boolean isValid = true;
+						if (task.duration < 1)
+						{
+							isValid = false;
+							editDurationError.setText("must be > 0");
+							editDurationError.setVisibility(View.VISIBLE);
+						} else
+						{
+							editDurationError.setVisibility(View.GONE);
+						}
+						if (task.interval < 1)
+						{
+							isValid = false;
+							editIntervalError.setText("must be > 0");
+							editIntervalError.setVisibility(View.VISIBLE);
+						} else
+						{
+							editIntervalError.setVisibility(View.GONE);
+						}
+						//if it's not valid, display the form with errors
+						if (!isValid)
+						{
+							return;
+						}
+						
 						//start the task
 						task.startPictureTakingService();
 						
