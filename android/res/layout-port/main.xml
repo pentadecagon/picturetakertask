@@ -48,6 +48,13 @@
 		                    android:tag="Task duration"
 						    android:text="" >
 		                </com.picturetakertask.TimeInputText>
+		                
+		                <TextView
+		                    android:id="@+id/edit_duration_error"
+		                    style="@style/error"
+						    android:text=""
+						    android:visibility="gone" >
+		                </TextView>
 		
 		            </TableRow>
 		            
@@ -66,6 +73,13 @@
 		                    android:tag="Repeat interval"
 						    android:text="" >
 		                </com.picturetakertask.TimeInputText>
+		                
+		                <TextView
+		                    android:id="@+id/edit_interval_error"
+		                    style="@style/error"
+						    android:text=""
+						    android:visibility="gone" >
+		                </TextView>
 		
 		            </TableRow>
 		            
