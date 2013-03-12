@@ -50,6 +50,9 @@ public class AutoTakePictureActivity extends Activity implements SurfaceHolder.C
 
       //the camera parameters
       private Parameters parameters;
+      
+      //name of album in gallery containing pictures produced by this activity
+      public static final String ALBUM_NAME = "PictureTakerTask";
      
     /** Called when the activity is first created. */
     @Override
@@ -201,7 +204,7 @@ public class AutoTakePictureActivity extends Activity implements SurfaceHolder.C
               FileOutputStream outStream = null;
                    try{
                    	File mediaStorageDir = new File(Environment.getExternalStoragePublicDirectory(
-             	              Environment.DIRECTORY_PICTURES), "CameraBasic");
+             	              Environment.DIRECTORY_PICTURES), ALBUM_NAME);
                    	
                    	if (! mediaStorageDir.exists()){
                	        if (! mediaStorageDir.mkdirs()){
