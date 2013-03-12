@@ -8,11 +8,11 @@ import android.support.v4.app.FragmentActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.FrameLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.commonsware.cwac.wakeful.AlarmReceiver;
-import com.commonsware.cwac.wakeful.WakefulIntentService;
 
 /**
  * Start off the action.
@@ -35,6 +35,8 @@ public class MainActivity extends FragmentActivity {
 	private TimeInputText editInterval;
 	//edit delay field
 	private TimeInputText editDelay;
+	
+	private PreviewWindow mPreview = null;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -42,17 +44,22 @@ public class MainActivity extends FragmentActivity {
 	    setContentView(R.layout.main);
 	    
 	    initHandlesAndListeners();
-	    
-	    task = new Task(this);
+
 	}
   
 	@Override
 	protected void onResume() {
 		super.onResume();
-		Log.d("picturetaker", "called onResume");
+		Log.d("picturetaker", "called MainActivity.onResume");
 
-		task.setConfigFromSharedPreferences();
+		//add preview window, which activates camera
+		mPreview = new PreviewWindow(this);
+		FrameLayout preview = (FrameLayout) findViewById(R.id.preview_window);
+        preview.addView(mPreview);
 		
+		//task.setConfigFromSharedPreferences();
+        task = new Task(this);
+        
 		//double check that the task status is as expected
 		checkTaskStatusAndAdjustIfNecessary();
 
@@ -65,8 +72,14 @@ public class MainActivity extends FragmentActivity {
 
 	@Override
 	protected void onPause() {
+		
+		//remove preview window, which deactivates camera
+		FrameLayout preview = (FrameLayout) findViewById(R.id.preview_window);
+        preview.removeView(mPreview);
+        mPreview = null;
+		
 		super.onPause();
-		Log.d("picturetaker", "called onPause");
+		Log.d("picturetaker", "called MainActivity.onPause");
 	}
 	
 	/**
@@ -129,10 +142,7 @@ public class MainActivity extends FragmentActivity {
 	private void checkTaskStatusAndAdjustIfNecessary()
 	{
 		Log.d("picturetaker", "called checkTaskStatusAndAdjustIfNecessary");
-		
-		//whether we need to change the task status in the shared preferences
-		boolean changedStatus = false;
-		
+
 		//double check that the task status is correct
 		long now = System.currentTimeMillis();
 		SharedPreferences lastAlarmPrefs = this.getSharedPreferences("com.commonsware.cwac.wakeful.WakefulIntentService", MODE_PRIVATE);
@@ -142,8 +152,7 @@ public class MainActivity extends FragmentActivity {
 	    if (task.isRunning && ((now - lastAlarm) > (AppListener.MIN_DELAY + task.delay + 2.0*task.interval)))
 	    {
 	    	Log.d("picturetaker", "checkTaskStatusAndAdjustIfNecessary: last alarm was suspiciously long ago so stopping task");
-	    	task.isRunning = false;
-	    	changedStatus = true;
+	    	task.endPictureTakingServiceSilently();
 	    }
 	    
 	    //check if we can detect the running task
@@ -154,17 +163,12 @@ public class MainActivity extends FragmentActivity {
 	    {
 	    	Log.d("picturetaker", "checkTaskStatusAndAdjustIfNecessary: task is running when it should not be so stopping task");
 	    	//if task is supposed to be deactivated but we can detect it, cancel it
-	    	WakefulIntentService.cancelAlarms(this);
+	    	task.endPictureTakingServiceSilently();
 	    } else if (task.isRunning && pi == null)
 	    {
-	    	//if task is supposed to be running but we cannot detect it, cancel it
+	    	//if task is supposed to be running but we cannot detect it, update the config
 	    	Log.d("picturetaker", "checkTaskStatusAndAdjustIfNecessary: task is supposed to be running but we cannot detect it");
 	    	task.isRunning = false;
-	    	changedStatus = true;
-	    }
-	    if (changedStatus)
-	    {
-	    	//update the shared preferences to reflect the true values
 	    	task.updateSharedPreferencesFromConfig();
 	    }
 	}

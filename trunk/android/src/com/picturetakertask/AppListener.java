@@ -76,10 +76,10 @@ public class AppListener implements WakefulIntentService.AlarmListener {
 	public void sendWakefulWork(Context ctxt) {
 		Log.d("camera", "AppListener: called sendWakefulWork");
 
-		 Task task = new Task(ctxt);
-		 task.setConfigFromSharedPreferences();
+		Task task = new Task(ctxt);
+		double taskProgress = task.getProgress();
 		//check if task has expired
-		if (task.checkIfTaskHasExpired())
+		if (taskProgress > 1.01)
 		{
 			//end the task
 			Log.d("camera", "AppListener: task has expired so going to end it");
@@ -90,6 +90,18 @@ public class AppListener implements WakefulIntentService.AlarmListener {
 			//continue the task
 			Log.d("camera", "AppListener: task has not expired yet so going to continue it");
 			WakefulIntentService.sendWakefulWork(ctxt, AppService.class);
+			//update the progress notification
+			Log.d("camera", "AppListener: going to update progress bar with progress "+((int) (taskProgress * 100.0)));
+			NotificationHandler notificationHandler = new NotificationHandler(ctxt);
+			notificationHandler.updateProgressBar((int) (taskProgress * 100.0));
+			
+			//check if task will expire before the next iteration: if so, expire it
+			double progressAtNextIteration = task.getProgressAtNextIteration();
+			if (progressAtNextIteration > 1.01)
+			{
+				Log.d("camera", "AppListener: task will expire before next iteration so going to end it");
+				task.expirePictureTakingService();
+			}
 		}
 	}
 
