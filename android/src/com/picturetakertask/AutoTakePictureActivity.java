@@ -89,6 +89,8 @@ public class AutoTakePictureActivity extends Activity implements SurfaceHolder.C
     @Override
     protected void onPause() {
     	
+    	handler.removeCallbacksAndMessages(null);
+    	
     	//remove preview window, which deactivates camera
     	FrameLayout preview = (FrameLayout) findViewById(R.id.preview_window);
     	preview.removeView(sv);
