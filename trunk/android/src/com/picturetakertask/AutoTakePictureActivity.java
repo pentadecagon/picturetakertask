@@ -58,9 +58,6 @@ public class AutoTakePictureActivity extends Activity implements SurfaceHolder.C
     {
     	Log.d("camerabasic", "AutoTakePictureActivity.onCreate called");
         super.onCreate(savedInstanceState);
-        
-        //Remove title bar
-        this.requestWindowFeature(Window.FEATURE_NO_TITLE);
 
         setContentView(R.layout.auto_take_picture);
 
