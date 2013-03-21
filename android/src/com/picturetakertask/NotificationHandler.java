@@ -58,33 +58,7 @@ public class NotificationHandler {
 		PendingIntent stopTaskPendingIntent = PendingIntent.getActivity(ctxt, 0, stopTaskIntent, 0);
 		mBuilder.addAction(R.drawable.cancel, "stop task", stopTaskPendingIntent);
 	}
-	
-	/**
-	 * Get a navigation-adjusted pending intent from an original intent.
-	 * 
-	 * The pending intent is adjusted from the original intent so that the navigation will
-	 * behave as expected (clicking the back button takes user back to the launcher screen).
-	 * 
-	 * @param Intent intent The original intent
-	 * @param Class intentClass Activity class associated with the original intent
-	 * 
-	 * @return PendingIntent pendingIntent Pending intent with navigation adjusted
-	 */
-	private PendingIntent getPendingIntentFromIntent(Intent intent, Class intentClass)
-	{
-		TaskStackBuilder stackBuilder = TaskStackBuilder.create(ctxt);
-		// Adds the back stack for the Intent (but not the Intent itself)
-		stackBuilder.addParentStack(intentClass);
-		// Adds the Intent that starts the Activity to the top of the stack
-		stackBuilder.addNextIntent(intent);
-		PendingIntent pendingIntent =
-		        stackBuilder.getPendingIntent(
-		            0,
-		            PendingIntent.FLAG_UPDATE_CURRENT
-		        );
-		return pendingIntent;
-	}
-	
+
 	/**
 	 * Initialize the progress bar that will be displayed on the notification
 	 */
@@ -120,8 +94,11 @@ public class NotificationHandler {
         .setContentText("Done! Click to view pics.");
 
         //update the onclick intent of the notification to lead to the gallery album where the pictures are stored
-        Intent galleryIntent = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-        PendingIntent galleryPendingIntent = getPendingIntentFromIntent(galleryIntent, MainActivity.class);
+        Intent galleryIntent = new Intent();
+        galleryIntent.setType("image/*");
+        galleryIntent.setAction(Intent.ACTION_PICK);
+        galleryIntent.addCategory(Intent.CATEGORY_DEFAULT);
+        PendingIntent galleryPendingIntent =  PendingIntent.getActivity(ctxt, 0, galleryIntent, 0);
         mBuilder.setContentIntent(galleryPendingIntent);
         //set intent to be cancelled as soon as the user clicks on it
         mBuilder.setAutoCancel(true);
