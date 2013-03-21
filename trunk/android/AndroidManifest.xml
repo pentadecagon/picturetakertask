@@ -48,7 +48,7 @@
 			</intent-filter>
 		</activity>
         <activity android:name="com.picturetakertask.AutoTakePictureActivity"
-            android:screenOrientation="portrait"> 
+           > 
         </activity>
         <activity android:name="com.picturetakertask.CancelActivity"
             android:theme="@android:style/Theme.NoDisplay"> 
