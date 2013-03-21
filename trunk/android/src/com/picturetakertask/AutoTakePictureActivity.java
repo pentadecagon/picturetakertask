@@ -5,6 +5,8 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 import android.app.Activity;
 import android.content.Intent;
@@ -34,10 +36,7 @@ public class AutoTakePictureActivity extends Activity implements SurfaceHolder.C
 {
       //a variable to store a reference to the Surface View at the main.xml file
       private SurfaceView sv = null;
-   
-      //a bitmap to display the captured image
-      private Bitmap bmp;
-     
+
       //Camera variables
       //a surface holder
       private SurfaceHolder sHolder; 
@@ -219,8 +218,6 @@ public class AutoTakePictureActivity extends Activity implements SurfaceHolder.C
         public void onPictureTaken(byte[] data, Camera camera)
         {
        	 	  Log.d("camerabasic", "onPictureTaken called");
-              //decode the data obtained by the camera into a Bitmap
-              bmp = BitmapFactory.decodeByteArray(data, 0, data.length);
 
               FileOutputStream outStream = null;
                    try{
@@ -234,7 +231,9 @@ public class AutoTakePictureActivity extends Activity implements SurfaceHolder.C
                	        }
                	    }
                    	
-                   	String fileName = mediaStorageDir.getPath()+"/Image"+System.currentTimeMillis()+".jpg";
+                   	Date lm = new Date(System.currentTimeMillis());
+            		String lasmod = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss").format(lm);
+                   	String fileName = mediaStorageDir.getPath()+"/Image_"+lasmod+".jpg";
                    	
                        outStream = new FileOutputStream(fileName);
                        outStream.write(data);
