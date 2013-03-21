@@ -115,6 +115,7 @@ public class AutoTakePictureActivity extends Activity implements SurfaceHolder.C
     	  parameters = mCamera.getParameters();
     	  Camera.Size pictureSize = getBiggestPictureSize(parameters);   	  
     	  parameters.setPictureSize(pictureSize.width, pictureSize.height);
+    	  parameters.setFlashMode(Camera.Parameters.FLASH_MODE_AUTO);
     	  mCamera.setParameters(parameters);
     	  
           mCamera.startPreview();
